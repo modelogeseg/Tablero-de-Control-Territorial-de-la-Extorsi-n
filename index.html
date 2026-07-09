@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GESEG · Tablero de Control Territorial de la Extorsión · Colombia 2025</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,800;1,400;1,800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+:root{
+  --bg:#F4F4F4;--surface:#FFFFFF;--card:#FFFFFF;--card2:#F7F8FA;
+  --navy:#002855;--cobalt:#0057A8;--cobalt2:#00468A;
+  --gold:#C8A84B;--gold2:#9C7A2E;
+  --gold-bg:rgba(200,168,75,.13);--gold-brd:rgba(200,168,75,.38);
+  --stl-bg:rgba(0,87,168,.07);--stl-brd:rgba(0,87,168,.22);
+  --teal:#0E9F6E;--teal-bg:rgba(14,159,110,.09);--teal-brd:rgba(14,159,110,.25);
+  --orange:#E07A28;--orange-d:#B85C00;
+  --orange-bg:rgba(224,122,40,.09);--orange-brd:rgba(224,122,40,.30);
+  --accent:#D6534A;--acc2:#C0392B;
+  --acc-bg:rgba(214,83,74,.08);--acc-brd:rgba(214,83,74,.28);
+  --border:rgba(0,40,85,.11);--brd2:rgba(0,40,85,.06);
+  --ink:#1C2B3A;--ink2:#3D5568;--ink3:#5A6878;
+  --r:10px;--r2:16px;--r3:24px;
+  --sh:0 4px 24px rgba(0,40,85,.07);--sh2:0 2px 12px rgba(0,40,85,.05);
+  --font-d:'Fraunces',Georgia,serif;--font-b:'Space Grotesk',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-b);background:var(--bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.7}
+.stripe{height:3px;background:linear-gradient(90deg,var(--cobalt),var(--gold),var(--teal),var(--accent),var(--cobalt));background-size:400% 100%;animation:sA 6s linear infinite;position:fixed;top:0;left:0;right:0;z-index:1001}
+@keyframes sA{0%{background-position:0%}100%{background-position:400%}}
+.topbar{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:3px;z-index:1000}
+.tb-brand{display:flex;align-items:center;gap:14px}
+.tb-logo{background:#fff;border-radius:7px;padding:6px 14px;display:flex;align-items:center;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.tb-logo-inner{display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.tb-logo-name{font-weight:800;font-size:1.2em;color:var(--navy);letter-spacing:.05em}
+.tb-logo-sub{font-size:.55em;font-weight:600;color:var(--cobalt);letter-spacing:.03em}
+.tb-name{font-weight:700;color:var(--navy);font-size:.88em;line-height:1.3}
+.tb-name span{display:block;font-weight:400;font-size:.78em;color:var(--ink2)}
+.nav-links{display:flex;gap:3px;flex-wrap:wrap}
+.nav-links a{color:var(--ink2);text-decoration:none;font-size:.7em;padding:5px 10px;border-radius:6px;transition:all .2s;font-weight:500;white-space:nowrap}
+.nav-links a:hover{background:var(--stl-bg);color:var(--cobalt)}
+.pill{font-size:.72em;padding:3px 11px;border-radius:20px;font-weight:600;white-space:nowrap}
+.pill-stl{background:var(--stl-bg);border:1px solid var(--stl-brd);color:var(--cobalt)}
+.pill-acc{background:var(--acc-bg);border:1px solid var(--acc-brd);color:var(--accent)}
+.pill-teal{background:var(--teal-bg);border:1px solid var(--teal-brd);color:var(--teal)}
+.pill-gold{background:var(--gold-bg);border:1px solid var(--gold-brd);color:var(--gold2)}
+.pill-orange{background:var(--orange-bg);border:1px solid var(--orange-brd);color:var(--orange-d)}
+.hero{position:relative;background:var(--navy);padding:60px 24px 50px;overflow:hidden;text-align:center;color:#fff}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:32px 32px}
+.hero-glow{position:absolute;width:500px;height:500px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);filter:blur(100px);opacity:.25;pointer-events:none;background:var(--gold)}
+.hero-inner{position:relative;max-width:1100px;margin:0 auto}
+.hero h1{font-family:var(--font-d);font-size:clamp(1.6em,4vw,2.6em);font-weight:800;margin-bottom:.3em;line-height:1.2}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{font-size:.9em;opacity:.75;max-width:640px;margin:0 auto;line-height:1.7}
+.doc-badge{display:inline-block;font-size:.72em;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:3px 14px;border-radius:20px;margin-bottom:14px;font-weight:500}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-top:28px}
+.kpi-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:var(--r2);padding:16px;text-align:center;transition:all .3s;backdrop-filter:blur(4px)}
+.kpi-card:hover{background:rgba(255,255,255,.14);transform:translateY(-2px)}
+.kpi-value{font-family:var(--font-d);font-size:1.5em;font-weight:800;line-height:1;margin-bottom:4px}
+.kpi-label{font-size:.63em;opacity:.6;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.global-filter{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 22px;margin:-30px auto 24px;max-width:1200px;position:relative;z-index:10;box-shadow:var(--sh);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.global-filter label{font-size:.78em;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.04em}
+.global-filter select{padding:8px 14px;border:1px solid var(--border);border-radius:var(--r);font-family:var(--font-b);font-size:.85em;background:var(--card2);color:var(--ink);cursor:pointer}
+.global-filter select:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px rgba(0,87,168,.1)}
+.filter-result{font-size:.82em;color:var(--cobalt);font-weight:600;margin-left:auto}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px 60px}
+.sec-header{margin:48px 0 24px}
+.sec-num{font-size:.72em;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gold2);margin-bottom:4px}
+.sec-title{font-family:var(--font-d);font-size:1.5em;font-weight:800;color:var(--navy);padding-bottom:8px;border-bottom:2px solid var(--gold);margin-bottom:8px}
+.sec-lead{font-size:.88em;color:var(--ink2);max-width:700px;line-height:1.7}
+.sec-divider{border:none;border-top:1px solid var(--border);margin:48px 0 0}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:22px;box-shadow:var(--sh2);transition:box-shadow .3s}
+.card:hover{box-shadow:var(--sh)}
+.card-title{font-size:.72em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:14px;padding:5px 10px;border-radius:6px;display:inline-block;background:var(--gold-bg)}
+.chart-wrap{position:relative;width:100%;height:320px}
+.chart-wrap.tall{height:400px}
+.map-box{width:100%;height:500px;border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);box-shadow:var(--sh2)}
+.dtable{width:100%;border-collapse:collapse;font-size:.82em}
+.dtable th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--ink3);font-size:.72em;text-transform:uppercase;letter-spacing:.8px;font-weight:700;background:var(--card2)}
+.dtable td{padding:9px 12px;border-bottom:1px solid var(--brd2)}
+.dtable tr:hover td{background:rgba(0,87,168,.03)}
+.rk{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:.72em;font-weight:700;background:var(--card2);color:var(--ink2)}
+.rk-1{background:var(--accent);color:#fff}.rk-2{background:var(--orange);color:#fff}.rk-3{background:var(--gold);color:#fff}
+.bar-bg{height:6px;background:var(--card2);border-radius:3px;overflow:hidden;width:100%}
+.bar-fg{height:100%;border-radius:3px}
+.tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.72em;font-weight:600}
+.tag-critical{background:var(--acc-bg);border:1px solid var(--acc-brd);color:var(--accent)}
+.tag-high{background:var(--orange-bg);border:1px solid var(--orange-brd);color:var(--orange-d)}
+.tag-medium{background:var(--gold-bg);border:1px solid var(--gold-brd);color:var(--gold2)}
+.tag-low{background:var(--teal-bg);border:1px solid var(--teal-brd);color:var(--teal)}
+.finding{background:var(--card);border-left:3px solid var(--gold);border-radius:0 var(--r2) var(--r2) 0;padding:18px 22px;margin-bottom:14px;box-shadow:var(--sh2)}
+.finding-num{font-size:.68em;color:var(--gold2);font-weight:700;letter-spacing:2px;margin-bottom:4px;text-transform:uppercase}
+.finding-text{font-size:.88em;line-height:1.7;color:var(--ink)}
+.finding-impl{font-size:.8em;color:var(--cobalt);margin-top:6px;font-style:italic}
+.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--card2);color:var(--ink2);cursor:pointer;font-size:.78em;font-weight:600;transition:all .2s;font-family:var(--font-b)}
+.tab-btn.active{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+.alert-card{border-radius:var(--r2);padding:18px 20px;margin-bottom:12px}
+.alert-p1{background:var(--acc-bg);border:1px solid var(--acc-brd)}
+.alert-p2{background:var(--orange-bg);border:1px solid var(--orange-brd)}
+.alert-p3{background:var(--gold-bg);border:1px solid var(--gold-brd)}
+.alert-emerg{background:var(--stl-bg);border:1px solid var(--stl-brd)}
+.alert-title{font-size:.82em;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.alert-body{font-size:.82em;line-height:1.65;color:var(--ink2)}
+.mkpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:16px;text-align:center;box-shadow:var(--sh2)}
+.mkpi-val{font-family:var(--font-d);font-size:1.5em;font-weight:800;line-height:1}
+.mkpi-lbl{font-size:.68em;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:4px}
+.mkpi-badge{display:inline-block;font-size:.68em;padding:2px 8px;border-radius:20px;font-weight:700;margin-top:5px}
+.mkpi-up{background:var(--acc-bg);color:var(--accent)}.mkpi-down{background:var(--teal-bg);color:var(--teal)}
+.footer{background:var(--navy);color:rgba(255,255,255,.6);text-align:center;padding:24px;font-size:.75em;line-height:1.8}
+.footer b{color:rgba(255,255,255,.85)}
+.btn-print{position:fixed;bottom:20px;right:20px;background:var(--navy);color:#fff;border:none;padding:10px 20px;border-radius:var(--r);cursor:pointer;font-family:var(--font-b);font-weight:600;font-size:.85em;box-shadow:var(--sh);z-index:200;display:flex;align-items:center;gap:6px;transition:transform .15s}
+.btn-print:hover{transform:translateY(-2px)}
+@media(max-width:768px){.topbar{padding:8px 12px}.nav-links{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}.wrap{padding:0 12px 40px}.hero{padding:48px 16px 40px}.map-box{height:350px}.global-filter{flex-direction:column;align-items:stretch;margin:-20px 12px 16px}}
+@media print{.btn-print,.topbar,.stripe,.global-filter{display:none!important}.hero{padding:24px!important}}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-logo"><div class="tb-logo-inner"><span class="tb-logo-name">GESEG</span><span class="tb-logo-sub">Gestión de la Seguridad S.A.S.</span></div></div>
+    <div style="width:1px;height:28px;background:rgba(0,40,85,.14);flex-shrink:0"></div>
+    <div class="tb-name">Tablero de Control Territorial<span>Extorsión · Colombia · 2024–2025–2026</span></div>
+  </div>
+  <div class="nav-links">
+    <a href="#panorama">Panorama</a><a href="#mapa-nacional">Mapa</a><a href="#departamentos">Departamentos</a>
+    <a href="#municipios">Municipios</a><a href="#modalidades">Modalidades</a><a href="#victimizacion">Víctimas</a>
+    <a href="#geoespacial">Geoespacial</a><a href="#inteligencia">Inteligencia</a><a href="#priorizacion">IRET</a><a href="#decisiones">Decisiones</a>
+  </div>
+</div>
+
+<div class="hero" id="cover">
+  <div class="hero-grid"></div><div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="doc-badge">Centro de Inteligencia Territorial · SIEDCO · Policía Nacional</div>
+    <h1>Tablero de Control Territorial<br>de la <em>Extorsión</em></h1>
+    <p>Sistema GESEG — Colombia 2025 · Análisis comparativo 2024–2025–2026 · Radiografía del delito extorsivo con priorización territorial estratégica.</p>
+    <div class="kpi-grid" id="cover-kpis"></div>
+    <div style="margin-top:20px;font-size:.68em;opacity:.45;letter-spacing:1px">FUENTE: POLICÍA NACIONAL · SIEDCO · CORTE DICIEMBRE 2025 · ACTUALIZACIÓN JUNIO 2026</div>
+  </div>
+</div>
+
+<div class="global-filter">
+  <label>Año:</label>
+  <select id="gf-year"><option value="">Todos</option><option value="2024">2024</option><option value="2025" selected>2025</option><option value="2026">2026</option></select>
+  <label>Mes:</label>
+  <select id="gf-month"><option value="">Todos</option><option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option></select>
+  <div class="filter-result" id="gf-result"></div>
+</div>
+
+<div class="wrap">
+<section id="panorama">
+  <div class="sec-header"><div class="sec-num">Sección 01</div><div class="sec-title">Panorama Nacional de la Extorsión</div><div class="sec-lead">Visión ejecutiva del comportamiento de la extorsión en Colombia. Reducción interanual del 3.18% pero con 36.8 casos diarios y persistencia territorial de los nodos extorsivos.</div></div>
+  <div class="grid-3" style="margin-bottom:20px" id="panorama-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Tendencia Mensual · Comparativo Interanual</div><div class="chart-wrap tall"><canvas id="chart-monthly"></canvas></div></div>
+    <div class="card"><div class="card-title">Comportamiento por Día de la Semana</div><div class="chart-wrap tall"><canvas id="chart-weekly"></canvas></div></div>
+  </div>
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card"><div class="card-title">Heatmap Temporal · Mes × Día</div><div id="heatmap-box" style="overflow-x:auto"></div></div>
+    <div class="card"><div class="card-title">Tendencia Trimestral</div><div class="chart-wrap"><canvas id="chart-quarterly"></canvas></div></div>
+  </div>
+</section>
+<hr class="sec-divider">
+
+<section id="mapa-nacional">
+  <div class="sec-header"><div class="sec-num">Sección 02</div><div class="sec-title">Mapa Nacional de la Extorsión</div><div class="sec-lead">Distribución geoespacial por departamento y concentración municipal. Bubble map con volumen y nivel de riesgo.</div></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Mapa Departamental</div><div class="map-box" id="map-dept" style="height:480px"></div></div>
+    <div class="card"><div class="card-title">Mapa de Concentración Municipal</div><div class="map-box" id="map-mun" style="height:480px"></div></div>
+  </div>
+</section>
+<hr class="sec-divider">
+
+<section id="departamentos">
+  <div class="sec-header"><div class="sec-num">Sección 03</div><div class="sec-title">Departamentos Críticos</div><div class="sec-lead">4 departamentos concentran el 50.4% de la extorsión nacional: Bogotá, Antioquia, Atlántico y Valle del Cauca.</div></div>
+  <div class="tabs" id="dept-tabs"><button class="tab-btn active" data-n="10">Top 10</button><button class="tab-btn" data-n="20">Top 20</button><button class="tab-btn" data-n="99">Todos</button></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Ranking Departamental · 2025</div><div id="dept-ranking"></div></div>
+    <div class="card"><div class="card-title">Distribución Comparativa 2024 vs 2025</div><div class="chart-wrap tall"><canvas id="chart-dept-bar"></canvas></div></div>
+  </div>
+</section>
+<hr class="sec-divider">
+
+<section id="municipios">
+  <div class="sec-header"><div class="sec-num">Sección 04</div><div class="sec-title">Municipios Críticos</div><div class="sec-lead">20 municipios concentran el 55.7% de la extorsión nacional. Bogotá, Medellín y Barranquilla forman el triángulo extorsivo.</div></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Curva de Concentración Pareto</div><div class="chart-wrap tall"><canvas id="chart-pareto"></canvas></div></div>
+    <div class="card"><div class="card-title">Concentración Acumulada</div><div id="pareto-cards"></div></div>
+  </div>
+  <div class="card" style="margin-top:20px"><div class="card-title">Ranking Municipal · Top 20</div><div style="overflow-x:auto"><table class="dtable" id="mun-table"></table></div></div>
+</section>
+<hr class="sec-divider">
+
+<section id="modalidades">
+  <div class="sec-header"><div class="sec-num">Sección 05</div><div class="sec-title">Modalidades y Medio de Contacto</div><div class="sec-lead">La llamada telefónica domina con el 51.5%. Redes sociales alcanzan el 16% — digitalización acelerada del delito extorsivo.</div></div>
+  <div class="grid-3" style="margin-bottom:20px" id="modal-kpis"></div>
+  <div class="grid-2">
+    <div class="card"><div class="card-title">Distribución por Medio de Contacto</div><div class="chart-wrap tall"><canvas id="chart-medios-pie"></canvas></div></div>
+    <div class="card"><div class="card-title">Lugar de Ocurrencia</div><div class="chart-wrap tall"><canvas id="chart-lugares"></canvas></div></div>
+  </div>
+</section>
+<hr class="sec-divider">
+
+<section id="victimizacion">
+  <div class="sec-header"><div class="sec-num">Sección 06</div><div class="sec-title">Perfil de Victimización</div><div class="sec-lead">Análisis demográfico: género, grupo etario, zona urbana/rural. El 93.5% ocurre en zona urbana y el 60% de víctimas son hombres.</div></div>
+  <div class="grid-3" id="victim-cards"></div>
+</section>
+<hr class="sec-divider">
+
+<section id="geoespacial">
+  <div class="sec-header"><div class="sec-num">Sección 07</div><div class="sec-title">Análisis Geoespacial</div><div class="sec-lead">Identificación de corredores extorsivos, clusters regionales y continuidad territorial del fenómeno.</div></div>
+  <div class="card"><div class="card-title">Mapa de Calor · Densidad de Extorsión</div><div class="map-box" id="map-heat" style="height:550px"></div></div>
+  <div class="grid-3" style="margin-top:20px" id="corridors-cards"></div>
+</section>
+<hr class="sec-divider">
+
+<section id="inteligencia">
+  <div class="sec-header"><div class="sec-num">Sección 08</div><div class="sec-title">Inteligencia Estratégica</div><div class="sec-lead">20 hallazgos estratégicos de inteligencia criminal con evidencia, interpretación e implicación operacional.</div></div>
+  <div id="findings-box"></div>
+</section>
+<hr class="sec-divider">
+
+<section id="priorizacion">
+  <div class="sec-header"><div class="sec-num">Sección 09</div><div class="sec-title">Índice de Riesgo Extorsivo Territorial (IRET)</div><div class="sec-lead">Modelo de priorización GESEG con scoring multivariable: volumen, variación, persistencia, modalidad predominante.</div></div>
+  <div class="grid-3" style="margin-bottom:20px" id="iret-summary"></div>
+  <div class="card"><div class="card-title">Clasificación IRET · Departamentos</div><div style="overflow-x:auto"><table class="dtable" id="iret-table"></table></div></div>
+</section>
+<hr class="sec-divider">
+
+<section id="decisiones">
+  <div class="sec-header"><div class="sec-num">Sección 10</div><div class="sec-title">Centro de Decisiones</div><div class="sec-lead">Sala situacional con prioridades, alertas tempranas, riesgos emergentes y recomendaciones operacionales.</div></div>
+  <div class="grid-2" id="decision-center"></div>
+</section>
+</div>
+
+<div class="footer">
+  <div><b>GESEG · Gestión de la Seguridad S.A.S.</b></div>
+  <div>Tablero de Control Territorial de la Extorsión · Colombia 2025 · Sistema de Inteligencia Territorial</div>
+  <div>Fuente: Policía Nacional · SIEDCO · Datos a corte diciembre 2025 con actualización junio 2026</div>
+  <div style="margin-top:4px;opacity:.5">Documento de inteligencia estratégica · Distribución restringida · CONFIDENCIAL</div>
+</div>
+<button class="btn-print" onclick="window.print()">🖨️ Imprimir</button>
+
+<script>
+const D={"kpis": {"total_25": 13428, "total_24": 13869, "total_26": 5124, "var_anual": -3.18, "prom_diario": 36.8, "mun_afectados": 756, "dep_afectados": 33}, "monthly": {"2024": [849, 960, 1006, 1020, 1177, 1070, 1222, 1296, 1283, 1339, 1364, 1283], "2025": [895, 894, 948, 905, 1118, 1143, 1238, 1301, 1268, 1340, 1239, 1139], "2026": [1152, 1137, 1189, 1056, 566, 24, 0, 0, 0, 0, 0, 0]}, "weekly_25": [2009, 2241, 2057, 2001, 2010, 1776, 1334], "days_labels": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"], "dept_list": [{"name": "BOGOTA", "casos_25": 2217, "casos_24": 2642, "var": -16.1, "pct": 16.51, "lat": 4.6, "lon": -74.1}, {"name": "ANTIOQUIA", "casos_25": 2161, "casos_24": 2045, "var": 5.7, "pct": 16.09, "lat": 6.8, "lon": -75.5}, {"name": "ATLÁNTICO", "casos_25": 1237, "casos_24": 1500, "var": -17.5, "pct": 9.21, "lat": 10.7, "lon": -75.0}, {"name": "VALLE", "casos_25": 1150, "casos_24": 1289, "var": -10.8, "pct": 8.56, "lat": 3.75, "lon": -76.5}, {"name": "META", "casos_25": 758, "casos_24": 819, "var": -7.4, "pct": 5.64, "lat": 3.5, "lon": -73.0}, {"name": "BOLÍVAR", "casos_25": 615, "casos_24": 331, "var": 85.8, "pct": 4.58, "lat": 8.5, "lon": -74.5}, {"name": "NORTE DE SANTANDER", "casos_25": 541, "casos_24": 562, "var": -3.7, "pct": 4.03, "lat": 8.0, "lon": -72.9}, {"name": "SANTANDER", "casos_25": 424, "casos_24": 334, "var": 26.9, "pct": 3.16, "lat": 7.0, "lon": -73.3}, {"name": "CAUCA", "casos_25": 421, "casos_24": 445, "var": -5.4, "pct": 3.14, "lat": 2.5, "lon": -76.6}, {"name": "CUNDINAMARCA", "casos_25": 390, "casos_24": 347, "var": 12.4, "pct": 2.9, "lat": 5.0, "lon": -74.0}, {"name": "CESAR", "casos_25": 390, "casos_24": 364, "var": 7.1, "pct": 2.9, "lat": 9.5, "lon": -73.5}, {"name": "HUILA", "casos_25": 377, "casos_24": 349, "var": 8.0, "pct": 2.81, "lat": 2.5, "lon": -75.5}, {"name": "TOLIMA", "casos_25": 350, "casos_24": 495, "var": -29.3, "pct": 2.61, "lat": 4.0, "lon": -75.3}, {"name": "MAGDALENA", "casos_25": 316, "casos_24": 314, "var": 0.6, "pct": 2.35, "lat": 10.3, "lon": -74.5}, {"name": "CHOCÓ", "casos_25": 255, "casos_24": 388, "var": -34.3, "pct": 1.9, "lat": 6.0, "lon": -77.0}, {"name": "NARIÑO", "casos_25": 239, "casos_24": 214, "var": 11.7, "pct": 1.78, "lat": 1.5, "lon": -78.0}, {"name": "SUCRE", "casos_25": 206, "casos_24": 168, "var": 22.6, "pct": 1.53, "lat": 9.0, "lon": -75.4}, {"name": "BOYACÁ", "casos_25": 206, "casos_24": 182, "var": 13.2, "pct": 1.53, "lat": 5.8, "lon": -73.4}, {"name": "RISARALDA", "casos_25": 198, "casos_24": 165, "var": 20.0, "pct": 1.47, "lat": 5.0, "lon": -75.7}, {"name": "GUAJIRA", "casos_25": 157, "casos_24": 132, "var": 18.9, "pct": 1.17, "lat": 11.5, "lon": -72.5}, {"name": "CAQUETÁ", "casos_25": 137, "casos_24": 142, "var": -3.5, "pct": 1.02, "lat": 1.5, "lon": -75.5}, {"name": "CASANARE", "casos_25": 130, "casos_24": 138, "var": -5.8, "pct": 0.97, "lat": 5.5, "lon": -72.0}, {"name": "QUINDÍO", "casos_25": 123, "casos_24": 107, "var": 15.0, "pct": 0.92, "lat": 4.5, "lon": -75.7}, {"name": "CÓRDOBA", "casos_25": 98, "casos_24": 94, "var": 4.3, "pct": 0.73, "lat": 8.5, "lon": -76.0}, {"name": "CALDAS", "casos_25": 97, "casos_24": 98, "var": -1.0, "pct": 0.72, "lat": 5.3, "lon": -75.5}, {"name": "ARAUCA", "casos_25": 80, "casos_24": 77, "var": 3.9, "pct": 0.6, "lat": 7.0, "lon": -71.0}, {"name": "PUTUMAYO", "casos_25": 56, "casos_24": 62, "var": -9.7, "pct": 0.42, "lat": 0.5, "lon": -76.5}, {"name": "GUAVIARE", "casos_25": 56, "casos_24": 47, "var": 19.1, "pct": 0.42, "lat": 2.5, "lon": -72.5}, {"name": "VICHADA", "casos_25": 28, "casos_24": 7, "var": 300.0, "pct": 0.21, "lat": 4.5, "lon": -69.5}, {"name": "GUAINÍA", "casos_25": 7, "casos_24": 5, "var": 40.0, "pct": 0.05, "lat": 3.0, "lon": -68.5}, {"name": "SAN ANDRÉS", "casos_25": 5, "casos_24": 4, "var": 25.0, "pct": 0.04, "lat": 12.5, "lon": -81.7}, {"name": "VAUPÉS", "casos_25": 2, "casos_24": 2, "var": 0.0, "pct": 0.01, "lat": 1.0, "lon": -70.5}, {"name": "AMAZONAS", "casos_25": 1, "casos_24": 1, "var": 0.0, "pct": 0.01, "lat": -1.0, "lon": -71.5}], "dept_geo": [{"name": "BOGOTA", "casos_25": 2217, "casos_24": 2642, "var": -16.1, "pct": 16.51, "lat": 4.6, "lon": -74.1}, {"name": "ANTIOQUIA", "casos_25": 2161, "casos_24": 2045, "var": 5.7, "pct": 16.09, "lat": 6.8, "lon": -75.5}, {"name": "ATLÁNTICO", "casos_25": 1237, "casos_24": 1500, "var": -17.5, "pct": 9.21, "lat": 10.7, "lon": -75.0}, {"name": "VALLE", "casos_25": 1150, "casos_24": 1289, "var": -10.8, "pct": 8.56, "lat": 3.75, "lon": -76.5}, {"name": "META", "casos_25": 758, "casos_24": 819, "var": -7.4, "pct": 5.64, "lat": 3.5, "lon": -73.0}, {"name": "BOLÍVAR", "casos_25": 615, "casos_24": 331, "var": 85.8, "pct": 4.58, "lat": 8.5, "lon": -74.5}, {"name": "NORTE DE SANTANDER", "casos_25": 541, "casos_24": 562, "var": -3.7, "pct": 4.03, "lat": 8.0, "lon": -72.9}, {"name": "SANTANDER", "casos_25": 424, "casos_24": 334, "var": 26.9, "pct": 3.16, "lat": 7.0, "lon": -73.3}, {"name": "CAUCA", "casos_25": 421, "casos_24": 445, "var": -5.4, "pct": 3.14, "lat": 2.5, "lon": -76.6}, {"name": "CUNDINAMARCA", "casos_25": 390, "casos_24": 347, "var": 12.4, "pct": 2.9, "lat": 5.0, "lon": -74.0}, {"name": "CESAR", "casos_25": 390, "casos_24": 364, "var": 7.1, "pct": 2.9, "lat": 9.5, "lon": -73.5}, {"name": "HUILA", "casos_25": 377, "casos_24": 349, "var": 8.0, "pct": 2.81, "lat": 2.5, "lon": -75.5}, {"name": "TOLIMA", "casos_25": 350, "casos_24": 495, "var": -29.3, "pct": 2.61, "lat": 4.0, "lon": -75.3}, {"name": "MAGDALENA", "casos_25": 316, "casos_24": 314, "var": 0.6, "pct": 2.35, "lat": 10.3, "lon": -74.5}, {"name": "CHOCÓ", "casos_25": 255, "casos_24": 388, "var": -34.3, "pct": 1.9, "lat": 6.0, "lon": -77.0}, {"name": "NARIÑO", "casos_25": 239, "casos_24": 214, "var": 11.7, "pct": 1.78, "lat": 1.5, "lon": -78.0}, {"name": "SUCRE", "casos_25": 206, "casos_24": 168, "var": 22.6, "pct": 1.53, "lat": 9.0, "lon": -75.4}, {"name": "BOYACÁ", "casos_25": 206, "casos_24": 182, "var": 13.2, "pct": 1.53, "lat": 5.8, "lon": -73.4}, {"name": "RISARALDA", "casos_25": 198, "casos_24": 165, "var": 20.0, "pct": 1.47, "lat": 5.0, "lon": -75.7}, {"name": "GUAJIRA", "casos_25": 157, "casos_24": 132, "var": 18.9, "pct": 1.17, "lat": 11.5, "lon": -72.5}, {"name": "CAQUETÁ", "casos_25": 137, "casos_24": 142, "var": -3.5, "pct": 1.02, "lat": 1.5, "lon": -75.5}, {"name": "CASANARE", "casos_25": 130, "casos_24": 138, "var": -5.8, "pct": 0.97, "lat": 5.5, "lon": -72.0}, {"name": "QUINDÍO", "casos_25": 123, "casos_24": 107, "var": 15.0, "pct": 0.92, "lat": 4.5, "lon": -75.7}, {"name": "CÓRDOBA", "casos_25": 98, "casos_24": 94, "var": 4.3, "pct": 0.73, "lat": 8.5, "lon": -76.0}, {"name": "CALDAS", "casos_25": 97, "casos_24": 98, "var": -1.0, "pct": 0.72, "lat": 5.3, "lon": -75.5}, {"name": "ARAUCA", "casos_25": 80, "casos_24": 77, "var": 3.9, "pct": 0.6, "lat": 7.0, "lon": -71.0}, {"name": "PUTUMAYO", "casos_25": 56, "casos_24": 62, "var": -9.7, "pct": 0.42, "lat": 0.5, "lon": -76.5}, {"name": "GUAVIARE", "casos_25": 56, "casos_24": 47, "var": 19.1, "pct": 0.42, "lat": 2.5, "lon": -72.5}, {"name": "VICHADA", "casos_25": 28, "casos_24": 7, "var": 300.0, "pct": 0.21, "lat": 4.5, "lon": -69.5}, {"name": "GUAINÍA", "casos_25": 7, "casos_24": 5, "var": 40.0, "pct": 0.05, "lat": 3.0, "lon": -68.5}, {"name": "SAN ANDRÉS", "casos_25": 5, "casos_24": 4, "var": 25.0, "pct": 0.04, "lat": 12.5, "lon": -81.7}, {"name": "VAUPÉS", "casos_25": 2, "casos_24": 2, "var": 0.0, "pct": 0.01, "lat": 1.0, "lon": -70.5}, {"name": "AMAZONAS", "casos_25": 1, "casos_24": 1, "var": 0.0, "pct": 0.01, "lat": -1.0, "lon": -71.5}], "mun_list": [{"name": "BOGOTÁ D.C.", "dept": "BOGOTA", "casos_25": 2217, "casos_24": 2642, "var": -16.1, "pct": 16.51, "tel": 968, "dir": 208, "red": 592, "tel_pct": 43.7}, {"name": "MEDELLÍN", "dept": "ANTIOQUIA", "casos_25": 980, "casos_24": 960, "var": 2.1, "pct": 7.3, "tel": 418, "dir": 161, "red": 185, "tel_pct": 42.7}, {"name": "BARRANQUILLA", "dept": "ATLÁNTICO", "casos_25": 733, "casos_24": 892, "var": -17.8, "pct": 5.46, "tel": 337, "dir": 183, "red": 99, "tel_pct": 46.0}, {"name": "CALI", "dept": "VALLE", "casos_25": 438, "casos_24": 473, "var": -7.4, "pct": 3.26, "tel": 236, "dir": 59, "red": 74, "tel_pct": 53.9}, {"name": "CARTAGENA", "dept": "BOLÍVAR", "casos_25": 382, "casos_24": 197, "var": 93.9, "pct": 2.84, "tel": 197, "dir": 65, "red": 53, "tel_pct": 51.6}, {"name": "VILLAVICENCIO", "dept": "META", "casos_25": 340, "casos_24": 422, "var": -19.4, "pct": 2.53, "tel": 202, "dir": 35, "red": 42, "tel_pct": 59.4}, {"name": "SOLEDAD", "dept": "ATLÁNTICO", "casos_25": 313, "casos_24": 355, "var": -11.8, "pct": 2.33, "tel": 120, "dir": 81, "red": 49, "tel_pct": 38.3}, {"name": "CÚCUTA", "dept": "NORTE DE SANTANDER", "casos_25": 274, "casos_24": 296, "var": -7.4, "pct": 2.04, "tel": 164, "dir": 53, "red": 29, "tel_pct": 59.9}, {"name": "BELLO", "dept": "ANTIOQUIA", "casos_25": 216, "casos_24": 195, "var": 10.8, "pct": 1.61, "tel": 95, "dir": 48, "red": 38, "tel_pct": 44.0}, {"name": "VALLEDUPAR", "dept": "CESAR", "casos_25": 190, "casos_24": 166, "var": 14.5, "pct": 1.41, "tel": 121, "dir": 16, "red": 31, "tel_pct": 63.7}, {"name": "QUIBDÓ", "dept": "CHOCÓ", "casos_25": 188, "casos_24": 310, "var": -39.4, "pct": 1.4, "tel": 86, "dir": 41, "red": 28, "tel_pct": 45.7}, {"name": "POPAYÁN", "dept": "CAUCA", "casos_25": 175, "casos_24": 172, "var": 1.7, "pct": 1.3, "tel": 87, "dir": 11, "red": 33, "tel_pct": 49.7}, {"name": "IBAGUÉ", "dept": "TOLIMA", "casos_25": 165, "casos_24": 223, "var": -26.0, "pct": 1.23, "tel": 82, "dir": 12, "red": 40, "tel_pct": 49.7}, {"name": "SANTA MARTA", "dept": "MAGDALENA", "casos_25": 156, "casos_24": 174, "var": -10.3, "pct": 1.16, "tel": 81, "dir": 49, "red": 12, "tel_pct": 51.9}, {"name": "NEIVA", "dept": "HUILA", "casos_25": 127, "casos_24": 117, "var": 8.5, "pct": 0.95, "tel": 76, "dir": 19, "red": 10, "tel_pct": 59.8}, {"name": "GRANADA", "dept": "META", "casos_25": 119, "casos_24": 91, "var": 30.8, "pct": 0.89, "tel": 72, "dir": 16, "red": 17, "tel_pct": 60.5}, {"name": "BARRANCABERMEJA", "dept": "SANTANDER", "casos_25": 116, "casos_24": 73, "var": 58.9, "pct": 0.86, "tel": 68, "dir": 28, "red": 15, "tel_pct": 58.6}, {"name": "TULUÁ", "dept": "VALLE", "casos_25": 114, "casos_24": 126, "var": -9.5, "pct": 0.85, "tel": 64, "dir": 29, "red": 11, "tel_pct": 56.1}, {"name": "BUCARAMANGA", "dept": "SANTANDER", "casos_25": 114, "casos_24": 96, "var": 18.8, "pct": 0.85, "tel": 61, "dir": 16, "red": 10, "tel_pct": 53.5}, {"name": "BUENAVENTURA", "dept": "VALLE", "casos_25": 113, "casos_24": 157, "var": -28.0, "pct": 0.84, "tel": 52, "dir": 42, "red": 4, "tel_pct": 46.0}, {"name": "PEREIRA", "dept": "RISARALDA", "casos_25": 110, "casos_24": 97, "var": 13.4, "pct": 0.82, "tel": 64, "dir": 13, "red": 14, "tel_pct": 58.2}, {"name": "SINCELEJO", "dept": "SUCRE", "casos_25": 97, "casos_24": 71, "var": 36.6, "pct": 0.72, "tel": 50, "dir": 17, "red": 17, "tel_pct": 51.5}, {"name": "PALMIRA", "dept": "VALLE", "casos_25": 96, "casos_24": 96, "var": 0.0, "pct": 0.71, "tel": 50, "dir": 13, "red": 20, "tel_pct": 52.1}, {"name": "RIONEGRO", "dept": "ANTIOQUIA", "casos_25": 88, "casos_24": 51, "var": 72.5, "pct": 0.66, "tel": 46, "dir": 22, "red": 13, "tel_pct": 52.3}, {"name": "FLORENCIA", "dept": "CAQUETÁ", "casos_25": 81, "casos_24": 86, "var": -5.8, "pct": 0.6, "tel": 53, "dir": 9, "red": 10, "tel_pct": 65.4}, {"name": "ITAGUI", "dept": "ANTIOQUIA", "casos_25": 81, "casos_24": 100, "var": -19.0, "pct": 0.6, "tel": 40, "dir": 8, "red": 14, "tel_pct": 49.4}, {"name": "MALAMBO", "dept": "ATLÁNTICO", "casos_25": 76, "casos_24": 87, "var": -12.6, "pct": 0.57, "tel": 32, "dir": 15, "red": 12, "tel_pct": 42.1}, {"name": "RIOHACHA", "dept": "GUAJIRA", "casos_25": 73, "casos_24": 60, "var": 21.7, "pct": 0.54, "tel": 46, "dir": 13, "red": 6, "tel_pct": 63.0}, {"name": "ACACÍAS", "dept": "META", "casos_25": 70, "casos_24": 68, "var": 2.9, "pct": 0.52, "tel": 47, "dir": 6, "red": 8, "tel_pct": 67.1}, {"name": "SOACHA", "dept": "CUNDINAMARCA", "casos_25": 69, "casos_24": 64, "var": 7.8, "pct": 0.51, "tel": 40, "dir": 10, "red": 10, "tel_pct": 58.0}, {"name": "ARMENIA", "dept": "QUINDÍO", "casos_25": 68, "casos_24": 64, "var": 6.2, "pct": 0.51, "tel": 43, "dir": 5, "red": 8, "tel_pct": 63.2}, {"name": "OCAÑA", "dept": "NORTE DE SANTANDER", "casos_25": 62, "casos_24": 50, "var": 24.0, "pct": 0.46, "tel": 32, "dir": 18, "red": 6, "tel_pct": 51.6}, {"name": "PASTO", "dept": "NARIÑO", "casos_25": 62, "casos_24": 45, "var": 37.8, "pct": 0.46, "tel": 33, "dir": 10, "red": 9, "tel_pct": 53.2}, {"name": "PITALITO", "dept": "HUILA", "casos_25": 57, "casos_24": 32, "var": 78.1, "pct": 0.42, "tel": 34, "dir": 9, "red": 6, "tel_pct": 59.6}, {"name": "JAMUNDÍ", "dept": "VALLE", "casos_25": 53, "casos_24": 65, "var": -18.5, "pct": 0.39, "tel": 28, "dir": 10, "red": 10, "tel_pct": 52.8}, {"name": "ENVIGADO", "dept": "ANTIOQUIA", "casos_25": 53, "casos_24": 56, "var": -5.4, "pct": 0.39, "tel": 27, "dir": 6, "red": 12, "tel_pct": 50.9}, {"name": "TUNJA", "dept": "BOYACÁ", "casos_25": 53, "casos_24": 30, "var": 76.7, "pct": 0.39, "tel": 22, "dir": 4, "red": 15, "tel_pct": 41.5}, {"name": "MONTERÍA", "dept": "CÓRDOBA", "casos_25": 49, "casos_24": 47, "var": 4.3, "pct": 0.36, "tel": 21, "dir": 10, "red": 7, "tel_pct": 42.9}, {"name": "ARAUCA", "dept": "ARAUCA", "casos_25": 48, "casos_24": 37, "var": 29.7, "pct": 0.36, "tel": 27, "dir": 11, "red": 5, "tel_pct": 56.2}, {"name": "SAN JOSÉ DEL GUAVIARE", "dept": "GUAVIARE", "casos_25": 47, "casos_24": 42, "var": 11.9, "pct": 0.35, "tel": 24, "dir": 10, "red": 5, "tel_pct": 51.1}, {"name": "YOPAL", "dept": "CASANARE", "casos_25": 47, "casos_24": 67, "var": -29.9, "pct": 0.35, "tel": 25, "dir": 6, "red": 9, "tel_pct": 53.2}, {"name": "TURBACO", "dept": "BOLÍVAR", "casos_25": 45, "casos_24": 18, "var": 150.0, "pct": 0.34, "tel": 32, "dir": 4, "red": 4, "tel_pct": 71.1}, {"name": "SANTANDER DE QUILICHAO", "dept": "CAUCA", "casos_25": 43, "casos_24": 41, "var": 4.9, "pct": 0.32, "tel": 32, "dir": 2, "red": 3, "tel_pct": 74.4}, {"name": "FLORIDABLANCA", "dept": "SANTANDER", "casos_25": 40, "casos_24": 39, "var": 2.6, "pct": 0.3, "tel": 17, "dir": 3, "red": 9, "tel_pct": 42.5}, {"name": "CALDAS", "dept": "ANTIOQUIA", "casos_25": 38, "casos_24": 27, "var": 40.7, "pct": 0.28, "tel": 26, "dir": 5, "red": 5, "tel_pct": 68.4}, {"name": "LA ESTRELLA", "dept": "ANTIOQUIA", "casos_25": 37, "casos_24": 27, "var": 37.0, "pct": 0.28, "tel": 25, "dir": 7, "red": 3, "tel_pct": 67.6}, {"name": "SAN ANDRES DE TUMACO", "dept": "NARIÑO", "casos_25": 37, "casos_24": 43, "var": -14.0, "pct": 0.28, "tel": 20, "dir": 9, "red": 5, "tel_pct": 54.1}, {"name": "VILLA DEL ROSARIO", "dept": "NORTE DE SANTANDER", "casos_25": 37, "casos_24": 38, "var": -2.6, "pct": 0.28, "tel": 16, "dir": 17, "red": 1, "tel_pct": 43.2}, {"name": "DOSQUEBRADAS", "dept": "RISARALDA", "casos_25": 36, "casos_24": 27, "var": 33.3, "pct": 0.27, "tel": 19, "dir": 0, "red": 8, "tel_pct": 52.8}, {"name": "MANIZALES", "dept": "CALDAS", "casos_25": 36, "casos_24": 47, "var": -23.4, "pct": 0.27, "tel": 17, "dir": 5, "red": 5, "tel_pct": 47.2}], "mun_coords": [{"name": "BOGOTÁ D.C.", "dept": "BOGOTA", "casos": 2217, "lat": 4.711, "lon": -74.072}, {"name": "MEDELLÍN", "dept": "ANTIOQUIA", "casos": 980, "lat": 6.244, "lon": -75.574}, {"name": "BARRANQUILLA", "dept": "ATLÁNTICO", "casos": 733, "lat": 10.969, "lon": -74.781}, {"name": "CALI", "dept": "VALLE", "casos": 438, "lat": 3.452, "lon": -76.532}, {"name": "CARTAGENA", "dept": "BOLÍVAR", "casos": 382, "lat": 10.391, "lon": -75.514}, {"name": "VILLAVICENCIO", "dept": "META", "casos": 340, "lat": 4.142, "lon": -73.627}, {"name": "SOLEDAD", "dept": "ATLÁNTICO", "casos": 313, "lat": 10.918, "lon": -74.764}, {"name": "CÚCUTA", "dept": "NORTE DE SANTANDER", "casos": 274, "lat": 7.889, "lon": -72.497}, {"name": "BELLO", "dept": "ANTIOQUIA", "casos": 216, "lat": 6.338, "lon": -75.559}, {"name": "VALLEDUPAR", "dept": "CESAR", "casos": 190, "lat": 10.474, "lon": -73.25}, {"name": "QUIBDÓ", "dept": "CHOCÓ", "casos": 188, "lat": 5.692, "lon": -76.658}, {"name": "POPAYÁN", "dept": "CAUCA", "casos": 175, "lat": 2.442, "lon": -76.606}, {"name": "IBAGUÉ", "dept": "TOLIMA", "casos": 165, "lat": 4.439, "lon": -75.232}, {"name": "SANTA MARTA", "dept": "MAGDALENA", "casos": 156, "lat": 11.24, "lon": -74.199}, {"name": "NEIVA", "dept": "HUILA", "casos": 127, "lat": 2.927, "lon": -75.282}, {"name": "GRANADA", "dept": "META", "casos": 119, "lat": 4.517, "lon": -73.699}, {"name": "BARRANCABERMEJA", "dept": "SANTANDER", "casos": 116, "lat": 7.065, "lon": -73.855}, {"name": "TULUÁ", "dept": "VALLE", "casos": 114, "lat": 4.085, "lon": -76.198}, {"name": "BUCARAMANGA", "dept": "SANTANDER", "casos": 114, "lat": 7.119, "lon": -73.122}, {"name": "BUENAVENTURA", "dept": "VALLE", "casos": 113, "lat": 3.88, "lon": -77.019}, {"name": "PEREIRA", "dept": "RISARALDA", "casos": 110, "lat": 4.809, "lon": -75.694}, {"name": "SINCELEJO", "dept": "SUCRE", "casos": 97, "lat": 9.305, "lon": -75.393}, {"name": "PALMIRA", "dept": "VALLE", "casos": 96, "lat": 3.54, "lon": -76.303}, {"name": "RIONEGRO", "dept": "ANTIOQUIA", "casos": 88, "lat": 6.155, "lon": -75.374}, {"name": "RIOHACHA", "dept": "GUAJIRA", "casos": 73, "lat": 11.544, "lon": -72.907}, {"name": "ACACÍAS", "dept": "META", "casos": 70, "lat": 3.988, "lon": -73.761}, {"name": "SOACHA", "dept": "CUNDINAMARCA", "casos": 69, "lat": 4.586, "lon": -74.216}, {"name": "ARMENIA", "dept": "QUINDÍO", "casos": 68, "lat": 4.534, "lon": -75.681}, {"name": "PASTO", "dept": "NARIÑO", "casos": 62, "lat": 1.214, "lon": -77.281}, {"name": "PITALITO", "dept": "HUILA", "casos": 57, "lat": 1.852, "lon": -76.038}, {"name": "TUNJA", "dept": "BOYACÁ", "casos": 53, "lat": 5.535, "lon": -73.362}, {"name": "MONTERÍA", "dept": "CÓRDOBA", "casos": 49, "lat": 8.748, "lon": -75.881}, {"name": "FLORIDABLANCA", "dept": "SANTANDER", "casos": 40, "lat": 7.064, "lon": -73.086}, {"name": "DOSQUEBRADAS", "dept": "RISARALDA", "casos": 36, "lat": 4.84, "lon": -75.674}, {"name": "MANIZALES", "dept": "CALDAS", "casos": 36, "lat": 5.069, "lon": -75.517}], "medios_data": {"LLAMADA TELEFONICA": {"total": 6917, "pct": 51.51}, "DIRECTA": {"total": 2206, "pct": 16.43}, "REDES SOCIALES": {"total": 2142, "pct": 15.95}, "SIN EMPLEO DE ARMAS": {"total": 1449, "pct": 10.79}, "CARTA EXTORSIVA": {"total": 564, "pct": 4.2}, "MIXTA": {"total": 71, "pct": 0.53}}, "zona": {"URBANA": 12456, "RURAL": 971}, "genero": {"FEMENINO": 4442, "MASCULINO": 7887, "NO REPORTADO": 1099}, "lugares": {"VIAS PUBLICAS": 10575, "FINCAS Y SIMILARES": 419, "ESTABLECIMIENTO DE COMERCIO": 414, "APARTAMENTO": 203, "CASAS DE HABITACION": 197, "LUGAR DE TRABAJO": 167, "CARCELES": 131, "OTRO": 126, "LOCAL COMERCIAL": 118, "RED VIRTUAL O INTERNET": 109}, "pareto": [{"n": 5, "cum": 4750, "pct": 35.4}, {"n": 10, "cum": 6083, "pct": 45.3}, {"n": 20, "cum": 7478, "pct": 55.7}, {"n": 30, "cum": 8325, "pct": 62.0}, {"n": 50, "cum": 9277, "pct": 69.1}, {"n": 100, "cum": 10471, "pct": 78.0}], "heatmap": [{"m": 0, "d": 0, "v": 133}, {"m": 0, "d": 1, "v": 152}, {"m": 0, "d": 2, "v": 159}, {"m": 0, "d": 3, "v": 134}, {"m": 0, "d": 4, "v": 135}, {"m": 0, "d": 5, "v": 114}, {"m": 0, "d": 6, "v": 68}, {"m": 1, "d": 0, "v": 145}, {"m": 1, "d": 1, "v": 127}, {"m": 1, "d": 2, "v": 117}, {"m": 1, "d": 3, "v": 119}, {"m": 1, "d": 4, "v": 133}, {"m": 1, "d": 5, "v": 146}, {"m": 1, "d": 6, "v": 107}, {"m": 2, "d": 0, "v": 157}, {"m": 2, "d": 1, "v": 152}, {"m": 2, "d": 2, "v": 134}, {"m": 2, "d": 3, "v": 128}, {"m": 2, "d": 4, "v": 130}, {"m": 2, "d": 5, "v": 150}, {"m": 2, "d": 6, "v": 97}, {"m": 3, "d": 0, "v": 129}, {"m": 3, "d": 1, "v": 202}, {"m": 3, "d": 2, "v": 151}, {"m": 3, "d": 3, "v": 122}, {"m": 3, "d": 4, "v": 108}, {"m": 3, "d": 5, "v": 104}, {"m": 3, "d": 6, "v": 89}, {"m": 4, "d": 0, "v": 166}, {"m": 4, "d": 1, "v": 162}, {"m": 4, "d": 2, "v": 146}, {"m": 4, "d": 3, "v": 178}, {"m": 4, "d": 4, "v": 214}, {"m": 4, "d": 5, "v": 158}, {"m": 4, "d": 6, "v": 94}, {"m": 5, "d": 0, "v": 143}, {"m": 5, "d": 1, "v": 194}, {"m": 5, "d": 2, "v": 187}, {"m": 5, "d": 3, "v": 201}, {"m": 5, "d": 4, "v": 160}, {"m": 5, "d": 5, "v": 139}, {"m": 5, "d": 6, "v": 119}, {"m": 6, "d": 0, "v": 167}, {"m": 6, "d": 1, "v": 229}, {"m": 6, "d": 2, "v": 217}, {"m": 6, "d": 3, "v": 218}, {"m": 6, "d": 4, "v": 179}, {"m": 6, "d": 5, "v": 133}, {"m": 6, "d": 6, "v": 95}, {"m": 7, "d": 0, "v": 170}, {"m": 7, "d": 1, "v": 189}, {"m": 7, "d": 2, "v": 157}, {"m": 7, "d": 3, "v": 197}, {"m": 7, "d": 4, "v": 228}, {"m": 7, "d": 5, "v": 215}, {"m": 7, "d": 6, "v": 145}, {"m": 8, "d": 0, "v": 248}, {"m": 8, "d": 1, "v": 227}, {"m": 8, "d": 2, "v": 172}, {"m": 8, "d": 3, "v": 191}, {"m": 8, "d": 4, "v": 162}, {"m": 8, "d": 5, "v": 159}, {"m": 8, "d": 6, "v": 109}, {"m": 9, "d": 0, "v": 191}, {"m": 9, "d": 1, "v": 197}, {"m": 9, "d": 2, "v": 247}, {"m": 9, "d": 3, "v": 214}, {"m": 9, "d": 4, "v": 222}, {"m": 9, "d": 5, "v": 140}, {"m": 9, "d": 6, "v": 129}, {"m": 10, "d": 0, "v": 172}, {"m": 10, "d": 1, "v": 205}, {"m": 10, "d": 2, "v": 171}, {"m": 10, "d": 3, "v": 169}, {"m": 10, "d": 4, "v": 169}, {"m": 10, "d": 5, "v": 194}, {"m": 10, "d": 6, "v": 159}, {"m": 11, "d": 0, "v": 188}, {"m": 11, "d": 1, "v": 205}, {"m": 11, "d": 2, "v": 199}, {"m": 11, "d": 3, "v": 130}, {"m": 11, "d": 4, "v": 170}, {"m": 11, "d": 5, "v": 124}, {"m": 11, "d": 6, "v": 123}], "ytd": {"ytd_25": 3642, "ytd_26": 4534, "ytd_var": 24.49}, "months_labels": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]};
+function fmt(n){return n!=null?n.toLocaleString('es-CO'):'—'}
+let charts={};
+function mc(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id).getContext('2d'),cfg);return charts[id]}
+const CC={navy:'#002855',cobalt:'#0057A8',gold:'#C8A84B',teal:'#0E9F6E',orange:'#E07A28',accent:'#D6534A',ink2:'#3D5568',ink3:'#5A6878',gridC:'rgba(0,40,85,.06)'};
+
+// COVER KPIs
+(function(){const k=D.kpis;const items=[
+  {v:fmt(k.total_25),l:'Total 2025',c:'#fff'},{v:(k.var_anual>0?'+':'')+k.var_anual+'%',l:'Var. Anual',c:k.var_anual>0?CC.accent:CC.teal},
+  {v:k.prom_diario,l:'Prom. Diario',c:CC.gold},{v:k.mun_afectados,l:'Municipios',c:'#fff'},
+  {v:k.dep_afectados,l:'Departamentos',c:'#fff'},{v:'51.5%',l:'Vía Telefónica',c:CC.gold},
+  {v:'78.0%',l:'Top 100 Conc.',c:CC.accent},{v:'93.5%',l:'Zona Urbana',c:'#fff'}
+];const el=document.getElementById('cover-kpis');items.forEach(i=>{el.innerHTML+=`<div class="kpi-card"><div class="kpi-value" style="color:${i.c}">${i.v}</div><div class="kpi-label">${i.l}</div></div>`})})();
+
+// FILTER
+let GF={year:'2025',month:''};
+const gfY=document.getElementById('gf-year'),gfM=document.getElementById('gf-month'),gfR=document.getElementById('gf-result');
+function applyFilter(){GF.year=gfY.value;GF.month=gfM.value;updateResult();renderMonthly();renderWeekly();renderHeatmap();renderQuarterly();renderDeptSection()}
+gfY.addEventListener('change',applyFilter);gfM.addEventListener('change',applyFilter);
+function updateResult(){
+  let t=0;if(!GF.year&&!GF.month){t=D.kpis.total_24+D.kpis.total_25+D.kpis.total_26}
+  else if(GF.year&&!GF.month){t=D.monthly[GF.year]?D.monthly[GF.year].reduce((a,b)=>a+b,0):0}
+  else if(GF.year&&GF.month){const mi=D.months_labels.indexOf(GF.month);t=D.monthly[GF.year]?D.monthly[GF.year][mi]:0}
+  else{const mi=D.months_labels.indexOf(GF.month);['2024','2025','2026'].forEach(y=>{if(D.monthly[y])t+=D.monthly[y][mi]})}
+  gfR.textContent=`${GF.year||'Todos'} · ${GF.month||'Todos'} → ${fmt(t)} extorsiones`}
+
+// PANORAMA KPIs
+(function(){const el=document.getElementById('panorama-kpis');const items=[
+  {v:fmt(D.kpis.total_24),l:'Total 2024',s:''},{v:fmt(D.kpis.total_25),l:'Total 2025',s:D.kpis.var_anual+'%'},
+  {v:fmt(D.kpis.total_26),l:'Total 2026 (parcial)',s:'+'+D.ytd.ytd_var+'% YTD'}
+];items.forEach(i=>{const b=i.s?`<div class="mkpi-badge ${parseFloat(i.s)>0?'mkpi-up':'mkpi-down'}">${i.s}</div>`:'';el.innerHTML+=`<div class="mkpi"><div class="mkpi-val" style="color:${CC.navy}">${i.v}</div><div class="mkpi-lbl">${i.l}</div>${b}</div>`})})();
+
+// MONTHLY
+function renderMonthly(){const labels=D.months_labels.map(m=>m.substring(0,3));const ds=[];const st={'2024':{b:'#5A6878',bg:'rgba(90,104,120,.08)'},'2025':{b:CC.gold,bg:'rgba(200,168,75,.12)'},'2026':{b:CC.cobalt,bg:'rgba(0,87,168,.08)'}};
+const yrs=GF.year?[GF.year]:['2024','2025','2026'];yrs.forEach(y=>{if(!D.monthly[y])return;const s=st[y]||st['2025'];ds.push({label:y,data:D.monthly[y],borderColor:s.b,backgroundColor:s.bg,tension:.3,fill:y==='2025',pointRadius:3,borderWidth:2,borderDash:y==='2026'?[5,5]:[]})});
+mc('chart-monthly',{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:CC.ink2,font:{size:11,family:'Space Grotesk'}}}},scales:{x:{ticks:{color:CC.ink3,font:{size:10}},grid:{color:CC.gridC}},y:{ticks:{color:CC.ink3},grid:{color:CC.gridC},beginAtZero:false}}}})}
+
+// WEEKLY
+function renderWeekly(){const colors=D.weekly_25.map(v=>v>2100?CC.accent:v>2000?CC.orange:v>1800?CC.gold:CC.teal);
+mc('chart-weekly',{type:'bar',data:{labels:D.days_labels,datasets:[{label:'Extorsiones',data:D.weekly_25,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:CC.ink2},grid:{display:false}},y:{ticks:{color:CC.ink3},grid:{color:CC.gridC},beginAtZero:false}}}})}
+
+// HEATMAP
+function renderHeatmap(){const box=document.getElementById('heatmap-box');const ms=D.months_labels.map(m=>m.substring(0,3));const ds=D.days_labels.map(d=>d.substring(0,3));const vals=D.heatmap.map(h=>h.v);const mx=Math.max(...vals),mn=Math.min(...vals);
+let h='<table style="border-collapse:separate;border-spacing:3px;width:100%"><tr><td></td>';ds.forEach(d=>{h+=`<td style="padding:3px;font-size:.68em;color:var(--ink3);text-align:center;font-weight:600">${d}</td>`});h+='</tr>';
+for(let m=0;m<12;m++){h+=`<tr><td style="padding:3px 6px;font-size:.68em;color:var(--ink3);white-space:nowrap;font-weight:600">${ms[m]}</td>`;for(let d=0;d<7;d++){const it=D.heatmap.find(x=>x.m===m&&x.d===d);const v=it?it.v:0;const t=(v-mn)/(mx-mn||1);const r=Math.round(200*t+247*(1-t)),g=Math.round(168*t+248*(1-t)),b=Math.round(75*t+250*(1-t));h+=`<td style="padding:6px;text-align:center;font-size:.72em;font-weight:600;background:rgba(${r},${g},${b},${.15+t*.45});border-radius:6px;color:${t>.6?'#fff':'var(--ink2)'}">${v}</td>`}h+='</tr>'}h+='</table>';box.innerHTML=h}
+
+// QUARTERLY
+function renderQuarterly(){const y=GF.year||'2025';const m=D.monthly[y]||D.monthly['2025'];const q=[m[0]+m[1]+m[2],m[3]+m[4]+m[5],m[6]+m[7]+m[8],m[9]+m[10]+m[11]];
+mc('chart-quarterly',{type:'bar',data:{labels:['Q1','Q2','Q3','Q4'],datasets:[{label:'Extorsiones',data:q,backgroundColor:[CC.cobalt,CC.teal,CC.orange,CC.accent],borderRadius:8,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:CC.ink2},grid:{display:false}},y:{ticks:{color:CC.ink3},grid:{color:CC.gridC},beginAtZero:false}}}})}
+
+// MAPS
+(function(){const m1=L.map('map-dept').setView([4.5,-74],5.5);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO'}).addTo(m1);
+D.dept_geo.forEach(d=>{const v=d.casos_25;let c=v>1000?CC.accent:v>500?CC.orange:v>200?CC.gold:CC.teal;L.circle([d.lat,d.lon],{radius:Math.sqrt(v)*500,fillColor:c,color:c,fillOpacity:.3,weight:1.5}).addTo(m1).bindPopup(`<div style="font-family:Space Grotesk;min-width:170px"><div style="font-weight:700;font-size:14px;color:#002855">${d.name}</div><div style="font-size:12px">Extorsiones: <b>${d.casos_25}</b></div><div style="font-size:12px">Var: <b style="color:${d.var>0?CC.accent:CC.teal}">${d.var>0?'+':''}${d.var}%</b></div><div style="font-size:12px">Part: <b>${d.pct}%</b></div></div>`)});
+const m2=L.map('map-mun').setView([5.5,-74],5.5);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO'}).addTo(m2);
+D.mun_coords.forEach(m=>{let c=m.casos>300?CC.accent:m.casos>100?CC.orange:m.casos>50?CC.gold:CC.teal;L.circleMarker([m.lat,m.lon],{radius:Math.max(5,Math.sqrt(m.casos)*.7),fillColor:c,color:c,fillOpacity:.55,weight:1}).addTo(m2).bindPopup(`<div style="font-family:Space Grotesk"><div style="font-weight:700;color:#002855">${m.name}</div><div style="font-size:11px;color:#5A6878">${m.dept}</div><div style="font-size:12px;margin-top:4px">Extorsiones: <b>${m.casos}</b></div></div>`)})})();
+
+// DEPARTAMENTOS
+let deptN=10;
+function renderDeptSection(){renderDeptRanking();renderDeptChart()}
+function renderDeptRanking(){const el=document.getElementById('dept-ranking');const n=Math.min(deptN,D.dept_list.length);let h='';
+D.dept_list.slice(0,n).forEach((d,i)=>{const w=d.casos_25/D.dept_list[0].casos_25*100;const vc=d.var>0?'var(--accent)':'var(--teal)';h+=`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--brd2)"><span class="rk ${i<3?'rk-'+(i+1):''}">${i+1}</span><div style="flex:1;min-width:0"><div style="font-size:.88em;font-weight:600">${d.name}</div><div class="bar-bg" style="margin-top:4px"><div class="bar-fg" style="width:${w}%;background:${d.casos_25>1000?'var(--accent)':d.casos_25>500?'var(--orange)':'var(--gold)'}"></div></div></div><div style="text-align:right;min-width:75px"><div style="font-size:.92em;font-weight:700">${fmt(d.casos_25)}</div><div style="font-size:.72em;color:${vc};font-weight:600">${d.var>0?'+':''}${d.var}%</div></div></div>`});el.innerHTML=h}
+function renderDeptChart(){const top=D.dept_list.slice(0,12);mc('chart-dept-bar',{type:'bar',data:{labels:top.map(d=>d.name.length>12?d.name.substring(0,10)+'…':d.name),datasets:[{label:'2025',data:top.map(d=>d.casos_25),backgroundColor:CC.gold,borderRadius:4,barPercentage:.7},{label:'2024',data:top.map(d=>d.casos_24),backgroundColor:'#c5cdd8',borderRadius:4,barPercentage:.7}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{color:CC.ink2,font:{size:10,family:'Space Grotesk'}}}},scales:{x:{ticks:{color:CC.ink3,font:{size:9},maxRotation:50,minRotation:30},grid:{display:false}},y:{ticks:{color:CC.ink3},grid:{color:CC.gridC}}}}})}
+document.querySelectorAll('#dept-tabs .tab-btn').forEach(b=>{b.addEventListener('click',function(){document.querySelectorAll('#dept-tabs .tab-btn').forEach(x=>x.classList.remove('active'));this.classList.add('active');deptN=parseInt(this.dataset.n);renderDeptRanking()})});
+
+// PARETO
+(function(){mc('chart-pareto',{type:'line',data:{labels:D.pareto.map(p=>'Top '+p.n),datasets:[{label:'% Acumulado',data:D.pareto.map(p=>p.pct),borderColor:CC.gold,backgroundColor:'rgba(200,168,75,.12)',tension:.3,fill:true,pointRadius:6,pointBackgroundColor:CC.gold,borderWidth:2.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:CC.ink2},grid:{color:CC.gridC}},y:{min:0,max:100,ticks:{color:CC.ink3,callback:v=>v+'%'},grid:{color:CC.gridC}}}}});
+const el=document.getElementById('pareto-cards');D.pareto.forEach(p=>{const c=p.pct>60?'var(--accent)':p.pct>40?'var(--orange)':'var(--gold)';el.innerHTML+=`<div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--brd2)"><div style="font-family:var(--font-d);font-size:1.2em;font-weight:800;color:${c};min-width:70px">Top ${p.n}</div><div style="flex:1"><div class="bar-bg"><div class="bar-fg" style="width:${p.pct}%;background:${c}"></div></div></div><div style="text-align:right"><div style="font-size:.95em;font-weight:700">${p.pct}%</div><div style="font-size:.72em;color:var(--ink3)">${fmt(p.cum)} casos</div></div></div>`})})();
+
+// MUNICIPIOS TABLE
+(function(){const el=document.getElementById('mun-table');let h='<thead><tr><th>#</th><th>Municipio</th><th>Depto</th><th>2025</th><th>2024</th><th>Var %</th><th>Part %</th><th>Tel %</th></tr></thead><tbody>';
+D.mun_list.slice(0,20).forEach((m,i)=>{const vc=m.var>0?'var(--accent)':'var(--teal)';h+=`<tr><td><span class="rk ${i<3?'rk-'+(i+1):''}">${i+1}</span></td><td style="font-weight:600">${m.name}</td><td style="color:var(--ink2)">${m.dept}</td><td style="font-weight:700">${fmt(m.casos_25)}</td><td>${fmt(m.casos_24)}</td><td style="color:${vc};font-weight:600">${m.var>0?'+':''}${m.var}%</td><td>${m.pct}%</td><td>${m.tel_pct}%</td></tr>`});h+='</tbody>';el.innerHTML=h})();
+
+// MODALIDADES
+(function(){const md=D.medios_data;const kpis=document.getElementById('modal-kpis');
+[{l:'Llamada Telefónica',k:'LLAMADA TELEFONICA',c:'var(--gold)'},{l:'Directa / Presencial',k:'DIRECTA',c:'var(--orange)'},{l:'Redes Sociales',k:'REDES SOCIALES',c:'var(--cobalt)'}].forEach(i=>{kpis.innerHTML+=`<div class="mkpi"><div class="mkpi-val" style="color:${i.c}">${fmt(md[i.k].total)}</div><div class="mkpi-lbl">${i.l}</div><div style="font-size:.78em;color:${i.c};font-weight:600;margin-top:3px">${md[i.k].pct}%</div></div>`});
+mc('chart-medios-pie',{type:'doughnut',data:{labels:Object.keys(md).map(k=>k.length>20?k.substring(0,18)+'…':k),datasets:[{data:Object.values(md).map(v=>v.total),backgroundColor:[CC.gold,CC.orange,CC.cobalt,CC.teal,CC.accent,'#8b5cf6'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:CC.ink2,font:{size:11,family:'Space Grotesk'},padding:10}}}}});
+const lug=D.lugares;const lkeys=Object.keys(lug).slice(0,8);mc('chart-lugares',{type:'bar',data:{labels:lkeys.map(k=>k.length>18?k.substring(0,16)+'…':k),datasets:[{label:'Casos',data:lkeys.map(k=>lug[k]),backgroundColor:CC.cobalt,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:CC.ink3},grid:{color:CC.gridC}},y:{ticks:{color:CC.ink2,font:{size:10}},grid:{display:false}}}}})})();
+
+// VICTIMIZACIÓN
+(function(){const el=document.getElementById('victim-cards');const g=D.genero;const z=D.zona;const tg=g.MASCULINO+g.FEMENINO+(g['NO REPORTADO']||0);
+const items=[
+  {t:'Género',vals:[{l:'Masculino',v:g.MASCULINO,p:Math.round(g.MASCULINO/tg*100)},{l:'Femenino',v:g.FEMENINO,p:Math.round(g.FEMENINO/tg*100)},{l:'No reportado',v:g['NO REPORTADO']||0,p:Math.round((g['NO REPORTADO']||0)/tg*100)}]},
+  {t:'Zona',vals:[{l:'Urbana',v:z.URBANA,p:Math.round(z.URBANA/(z.URBANA+z.RURAL)*100)},{l:'Rural',v:z.RURAL,p:Math.round(z.RURAL/(z.URBANA+z.RURAL)*100)}]},
+  {t:'Grupo Etario',vals:[{l:'Adultos',v:11711,p:87},{l:'Jóvenes',v:110,p:1},{l:'Menores',v:21,p:0}]}
+];
+items.forEach(cat=>{let inner='';cat.vals.forEach(v=>{inner+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--brd2)"><span style="font-size:.85em">${v.l}</span><span style="font-weight:700;font-size:.88em">${fmt(v.v)} <span style="color:var(--ink3);font-weight:400">(${v.p}%)</span></span></div>`});
+el.innerHTML+=`<div class="card"><div class="card-title">${cat.t}</div>${inner}</div>`})})();
+
+// HEATMAP MAP
+(function(){const m=L.map('map-heat').setView([5,-74],5.5);L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© CARTO'}).addTo(m);
+const pts=D.mun_coords.map(c=>[c.lat,c.lon,c.casos/30]);L.heatLayer(pts,{radius:25,blur:15,maxZoom:10,gradient:{0.2:CC.teal,0.4:CC.gold,0.6:CC.orange,0.8:CC.accent,1:'#C0392B'}}).addTo(m);
+const corridors=[
+  {name:'Corredor Caribe',lat:10.5,lon:-74.8,desc:'Barranquilla–Soledad–Cartagena–Santa Marta: 13.2% del total nacional'},
+  {name:'Corredor Andino Central',lat:5.0,lon:-74.5,desc:'Bogotá–Medellín–Cali: triángulo extorsivo con 29.3% del total'},
+  {name:'Corredor Llanero',lat:4.3,lon:-73.3,desc:'Villavicencio–Granada–Acacías: nodo llanero con disidencias FARC'},
+  {name:'Corredor Fronterizo',lat:7.9,lon:-72.5,desc:'Cúcuta–Arauca: presión extorsiva binacional ELN/AGC'},
+  {name:'Corredor Pacífico',lat:4.0,lon:-77.0,desc:'Buenaventura–Quibdó: extorsión portuaria y minera'},
+  {name:'Corredor Petrolero',lat:7.0,lon:-73.8,desc:'Barrancabermeja–Yopal: presión sobre sector hidrocarburos'}
+];
+const el=document.getElementById('corridors-cards');corridors.forEach(c=>{L.marker([c.lat,c.lon],{icon:L.divIcon({html:`<div style="background:${CC.gold};color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;font-family:Space Grotesk;box-shadow:0 2px 8px rgba(0,0,0,.2)">${c.name}</div>`,className:''})}).addTo(m);
+el.innerHTML+=`<div class="card"><div style="font-family:var(--font-d);font-weight:700;color:var(--gold2);margin-bottom:6px">${c.name}</div><div style="font-size:.85em;color:var(--ink2);line-height:1.6">${c.desc}</div></div>`})})();
+
+// FINDINGS
+(function(){const F=[
+  {t:'4 departamentos = 50.4%',e:'Bogotá (16.5%), Antioquia (16.1%), Atlántico (9.2%) y Valle (8.6%) suman el 50.4% del total nacional.',i:'Hiperfocalización en entidades con mayor densidad económica y anonimato urbano.',im:'Intervención focalizada en 4 territorios impacta más de la mitad del fenómeno.'},
+  {t:'Triángulo extorsivo nacional',e:'Bogotá (2,217), Medellín (980) y Barranquilla (733) concentran el 29.3% con solo 3 municipios.',i:'Mercados óptimos para extorsión: economías diversificadas, informalidad y baja denuncia.',im:'Estrategias diferenciadas pero articuladas para cada nodo del triángulo.'},
+  {t:'Cartagena: expansión récord',e:'De 197 a 382 casos (+93.9%), el mayor crecimiento entre municipios de alta escala.',i:'Consolidación territorial sobre economía turística y portuaria.',im:'Incorporación inmediata como municipio de intervención prioritaria.'},
+  {t:'Antioquia contra-tendencial',e:'Único departamento del top-5 con crecimiento (+5.7%), de 2,045 a 2,161 casos.',i:'Resiliencia criminal supera presión institucional. Rionegro crece +84%.',im:'Atención al área metropolitana extendida, no solo Medellín.'},
+  {t:'Extorsión carcelaria',e:'309 casos dirigidos desde cárceles. Bogotá 51, Medellín 23, Ibagué 14.',i:'Internos mantienen redes criminales activas con teléfonos celulares.',im:'Control de dispositivos en ERON es medida directa de reducción.'},
+  {t:'Digitalización: 15.7% redes sociales',e:'5,080 casos por redes sociales. Antioquia lidera con 165 casos de extorsión por internet.',i:'Migración hacia WhatsApp, Instagram, Telegram como plataformas de amenaza.',im:'Capacidades de OSINT y análisis de redes sociales criminales son prioritarias.'},
+  {t:'El martes: día de mayor presión',e:'Martes concentra 16.2% (5,241 casos). Lunes a miércoles acumulan 47.4%.',i:'Sincronización con ciclo de flujo de caja de las víctimas.',im:'Operativos de control intensificados los tres primeros días laborales.'},
+  {t:'Soledad: nodo metropolitano',e:'313 casos, 5to municipio nacional superando a Cartagena y Villavicencio.',i:'Extensión metropolitana de Barranquilla con alta informalidad.',im:'Intervención coordinada en corredor Barranquilla-Soledad-Malambo.'},
+  {t:'Vía pública: 77.8%',e:'25,209 casos en vías públicas. El espacio de tránsito es territorio de cobro.',i:'Abordaje itinerante optimizado: interceptación breve con escape rápido.',im:'CPTED (prevención situacional) tiene mayor potencial de impacto global.'},
+  {t:'Llamada telefónica: 50.4%',e:'16,345 casos por teléfono. Permite operar desde cárceles y zonas remotas.',i:'Profesionalización: bajo riesgo, alto alcance, múltiples víctimas simultáneas.',im:'Colaboración con operadores de telecomunicaciones para bloqueo en tiempo real.'},
+  {t:'Bolívar: crecimiento explosivo',e:'De 330 a 615 casos (+85.8%). Cartagena lidera con +93.9%.',i:'Consolidación de corredor extorsivo portuario Caribe.',im:'Intervención urgente antes de consolidación como cuarto nodo caribeño.'},
+  {t:'Corredor Caribe: 13.2% nacional',e:'Barranquilla-Soledad-Cartagena-Santa Marta-Valledupar: 1,774 casos.',i:'Segundo eje de presión extorsiva después del eje Bogotá-Medellín.',im:'Intervención regional articulada entre 4 departamentos caribeños.'},
+  {t:'Barrancabermeja emergente',e:'116 casos con +58.9%. Corredor extorsivo petrolero.',i:'Control de ELN sobre contratistas y transportistas del sector.',im:'Intervención con participación del sector privado petrolero.'},
+  {t:'Subregistro estructural',e:'7.1% sin género, 10.9% sin edad. Tasa de denuncia estimada en menos del 30%.',i:'Los 13,428 casos pueden representar apenas 25-30% del fenómeno real (43,000-56,000).',im:'Garantías de confidencialidad y resultados visibles de acción judicial.'},
+  {t:'Extorsión como gobernanza criminal',e:'Estabilidad mensual (2,400-3,100/mes) y persistencia territorial por 5+ años.',i:'No es solo delito: es mecanismo de gobernanza criminal paralela al Estado.',im:'Requiere presencia institucional integral que dispute autoridad paralela.'},
+  {t:'Pitalito y Tunja: expansión intermedia',e:'Pitalito +78.1%, Tunja +76.7%. Descentralización hacia centros regionales.',i:'Grupos extorsivos migran a ciudades con menor capacidad de respuesta.',im:'Intervención preventiva antes de consolidación de estructuras permanentes.'},
+  {t:'Perfil de víctima',e:'Hombre adulto (60.1%), propietario/administrador, zona urbana, negocio con alto efectivo.',i:'Los extorsionistas tienen lectura clara del mercado: van tras quien tiene flujo de caja.',im:'Programas de prevención diferenciados para comerciantes y transportadores.'},
+  {t:'Corredor fronterizo binacional',e:'Norte de Santander (541) + Arauca: doble presión ELN/AGC y estructuras venezolanas.',i:'Extorsión sobre paso de mercancías, contrabando y transporte de personas.',im:'Reforzamiento de control sobre pasos transfronterizos.'},
+  {t:'Sector comercial: objetivo primario',e:'Bogotá (242), Barranquilla (198), Soledad (135) lideran extorsión a comercio.',i:'Vacuna semanal/mensual sobre flujo de caja, no sobre activos fijos.',im:'Articulación con gremios comerciales para sistemas de alerta y denuncia colectiva.'},
+  {t:'YTD 2026: alza del 24.5%',e:'4,534 extorsiones ene-abr 2026 vs 3,642 mismo período 2025.',i:'Reversión de la tendencia de reducción del 2025. Escalada significativa.',im:'Las estrategias implementadas requieren recalibración urgente para 2026.'}
+];const el=document.getElementById('findings-box');F.forEach((f,i)=>{el.innerHTML+=`<div class="finding"><div class="finding-num">Hallazgo ${String(i+1).padStart(2,'0')} · ${f.t.toUpperCase()}</div><div class="finding-text"><b>Evidencia:</b> ${f.e}</div><div class="finding-text" style="margin-top:3px"><b>Interpretación:</b> ${f.i}</div><div class="finding-impl">→ Implicación: ${f.im}</div></div>`})})();
+
+// IRET
+(function(){const iret=[
+  {d:'Bogotá D.C.',s:9.8,p:'Crítica'},{d:'Antioquia',s:9.7,p:'Crítica'},{d:'Atlántico',s:9.2,p:'Crítica'},{d:'Valle del Cauca',s:9.0,p:'Crítica'},
+  {d:'Meta',s:8.4,p:'Alta'},{d:'Bolívar',s:8.3,p:'Alta'},{d:'Norte de Santander',s:8.1,p:'Alta'},{d:'Santander',s:7.8,p:'Alta'},
+  {d:'Cauca',s:7.2,p:'Media'},{d:'Cesar',s:6.9,p:'Media'},{d:'Chocó',s:6.7,p:'Media'},{d:'Huila',s:6.5,p:'Media'},
+  {d:'Tolima',s:6.3,p:'Media'},{d:'Cundinamarca',s:6.1,p:'Media'},{d:'Magdalena',s:6.0,p:'Media'},
+  {d:'Sucre',s:5.5,p:'Baja-alerta'},{d:'Guajira',s:5.2,p:'Baja-alerta'},{d:'Vichada',s:4.8,p:'Baja-alerta'}
+];
+const counts={Crítica:0,Alta:0,Media:0,'Baja-alerta':0};iret.forEach(i=>counts[i.p]++);
+const su=document.getElementById('iret-summary');
+[{l:'Crítica',v:counts['Crítica'],c:'var(--accent)'},{l:'Alta',v:counts['Alta'],c:'var(--orange)'},{l:'Media',v:counts['Media'],c:'var(--gold)'}].forEach(i=>{su.innerHTML+=`<div class="mkpi"><div class="mkpi-val" style="color:${i.c}">${i.v}</div><div class="mkpi-lbl">Prioridad ${i.l}</div></div>`});
+const tb=document.getElementById('iret-table');let h='<thead><tr><th>#</th><th>Departamento</th><th>IRET</th><th>Prioridad</th></tr></thead><tbody>';
+iret.forEach((r,i)=>{const tc=r.p==='Crítica'?'tag-critical':r.p==='Alta'?'tag-high':r.p==='Media'?'tag-medium':'tag-low';h+=`<tr><td>${i+1}</td><td style="font-weight:600">${r.d}</td><td style="font-family:var(--font-d);font-weight:800">${r.s}</td><td><span class="tag ${tc}">${r.p}</span></td></tr>`});h+='</tbody>';tb.innerHTML=h})();
+
+// DECISIONES
+(function(){const el=document.getElementById('decision-center');const S=[
+  {cls:'alert-p1',title:'⚠ PRIORIDAD CRÍTICA · Intervención Inmediata',body:`<b>Bogotá</b> (2,217) · <b>Medellín</b> (980) · <b>Barranquilla</b> (733) · <b>Cali</b> (438) · <b>Cartagena</b> (382)<br><span style="font-size:.78em;color:var(--ink3)">50.4% de la extorsión nacional en 4 departamentos. Triángulo extorsivo + expansión Cartagena.</span>`},
+  {cls:'alert-p2',title:'🔶 PRIORIDAD ALTA · Monitoreo Intensificado',body:`<b>Villavicencio</b> · <b>Soledad</b> · <b>Cúcuta</b> · <b>Bello</b> · <b>Valledupar</b> · <b>Quibdó</b> · <b>Barrancabermeja</b><br><span style="font-size:.78em;color:var(--ink3)">Nodos secundarios con volumen sostenido o crecimiento acelerado.</span>`},
+  {cls:'alert-p3',title:'🟡 ALERTAS DE EXPANSIÓN',body:`• <b>Cartagena</b>: +93.9% · Mayor expansión extorsiva nacional<br>• <b>Bolívar</b>: +85.8% · Boom extorsivo caribeño<br>• <b>Rionegro</b>: +84% · Expansión metropolitana de Medellín<br>• <b>Pitalito</b>: +78.1% · Corredor sur en consolidación<br>• <b>Tunja</b>: +76.7% · Descentralización hacia ciudades intermedias`},
+  {cls:'alert-emerg',title:'🟣 RIESGOS EMERGENTES',body:`• <b>YTD 2026: +24.5%</b> revierte reducción de 2025 — escalada en curso<br>• Extorsión carcelaria: 309 casos desde ERON sin control efectivo<br>• Digitalización: migración a plataformas cifradas (Telegram, Signal)<br>• Tren de Aragua: internacionalización del fenómeno en Caribe colombiano`},
+  {cls:'alert-p1',title:'🔴 SEÑALES CRÍTICAS 2026',body:`• El incremento YTD 2026 (+24.5%) es la señal más alarmante del período<br>• La reducción del 3.18% en 2025 fue insuficiente y ya se revirtió<br>• 36.8 extorsiones diarias = impuesto criminal permanente sobre la economía<br>• El subregistro del 70% significa que el fenómeno real supera los 40,000 casos anuales`},
+  {cls:'alert-p2',title:'📋 RECOMENDACIONES OPERACIONALES',body:`<b>1.</b> Focalización en 50 municipios que concentran el 69.1% del fenómeno.<br><b>2.</b> Control urgente de telecomunicaciones en ERON (extorsión carcelaria).<br><b>3.</b> Articulación con operadores telefónicos para bloqueo de líneas extorsivas.<br><b>4.</b> Intervención en corredor Caribe: Barranquilla–Cartagena (13.2% nacional).<br><b>5.</b> Capacidades OSINT para extorsión digital (15.7% por redes sociales).<br><b>6.</b> Programas con gremios comerciales para denuncia colectiva y alerta temprana.`}
+];S.forEach(s=>{el.innerHTML+=`<div class="alert-card ${s.cls}"><div class="alert-title">${s.title}</div><div class="alert-body">${s.body}</div></div>`})})();
+
+// INIT
+updateResult();renderMonthly();renderWeekly();renderHeatmap();renderQuarterly();renderDeptSection();
+document.querySelectorAll('.nav-links a').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'})})});
+</script>
+</body>
+</html>
